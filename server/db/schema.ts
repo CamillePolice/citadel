@@ -4,7 +4,7 @@ import { sql } from 'drizzle-orm'
 export const conditionItemEnum = pgEnum('condition_item', ['new_sealed', 'used'])
 export const conditionPriceEnum = pgEnum('condition_price', ['new', 'used'])
 export const completenessEnum = pgEnum('completeness', ['complete', 'incomplete', 'na'])
-export const priceSourceEnum = pgEnum('price_source', ['bricklink', 'brickowl'])
+export const priceSourceEnum = pgEnum('price_source', ['bricklink', 'brickowl', 'avenuedelabrique'])
 export const guideTypeEnum = pgEnum('guide_type', ['sold', 'stock', 'listing'])
 export const retirementStatusEnum = pgEnum('retirement_status', ['available', 'retiring_soon', 'retired', 'unknown'])
 

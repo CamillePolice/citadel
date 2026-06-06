@@ -8,6 +8,7 @@ import { fetchBrickOwlPrice } from '../lib/brickowl'
 import { fetchRebrickableSet } from '../lib/rebrickable'
 import { getGbpToEurRate, resetFxCache } from '../lib/fx'
 import { consolidate, type ConsolidatedPrice } from '../lib/consolidation'
+import { fetchAdlbPrice } from '../lib/avenuedelabrique'
 
 const schedule = process.env.CRON_SCHEDULE ?? '0 4 * * *'
 
@@ -139,10 +140,11 @@ export async function runRefresh(): Promise<void> {
     try {
       await ensureCatalogInDb(setNo)
 
-      const [blNew, blUsed, owl] = await Promise.all([
+      const [blNew, blUsed, owl, adlb] = await Promise.all([
         fetchBricklinkPrice(setNo, 'new'),
         fetchBricklinkPrice(setNo, 'used'),
         fetchBrickOwlPrice(setNo),
+        fetchAdlbPrice(setNo),
       ])
 
       const prices = consolidate({
@@ -153,7 +155,7 @@ export async function runRefresh(): Promise<void> {
         gbpToEur,
       })
 
-      if (prices.length === 0) {
+      if (prices.length === 0 && !adlb) {
         console.warn(`[worker] ${setNo}: no usable price from any source`)
         failed++
         continue
@@ -161,6 +163,28 @@ export async function runRefresh(): Promise<void> {
 
       for (const p of prices) {
         await upsertPriceSnapshot(p, capturedAt)
+      }
+
+      if (adlb) {
+        await upsertPriceSnapshot(
+          {
+            setNo,
+            condition: 'new',
+            source: 'avenuedelabrique',
+            guideType: 'listing',
+            currency: 'EUR',
+            originalCurrency: 'EUR',
+            fxRate: null,
+            avgPrice: adlb.minPrice,
+            minPrice: adlb.minPrice,
+            maxPrice: null,
+            qtySold: null,
+            unitQuantity: null,
+            degraded: false,
+          },
+          capturedAt,
+        )
+        console.log(`[worker] ${setNo}: ADLB retail=${adlb.minPrice}€`)
       }
       ok++
     } catch (err) {

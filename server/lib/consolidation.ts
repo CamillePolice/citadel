@@ -4,7 +4,7 @@ import type { BrickOwlPriceData } from './brickowl'
 export interface ConsolidatedPrice {
   setNo: string
   condition: 'new' | 'used'
-  source: 'bricklink' | 'brickowl'
+  source: 'bricklink' | 'brickowl' | 'avenuedelabrique'
   guideType: 'sold' | 'listing'
   currency: 'EUR'
   originalCurrency: string | null

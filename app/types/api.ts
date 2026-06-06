@@ -1,6 +1,6 @@
 export type ConditionItem = 'new_sealed' | 'used'
 export type Completeness = 'complete' | 'incomplete' | 'na'
-export type PriceSource = 'bricklink' | 'brickowl'
+export type PriceSource = 'bricklink' | 'brickowl' | 'avenuedelabrique'
 export type RetirementStatus = 'available' | 'retiring_soon' | 'retired' | 'unknown'
 
 export interface User {
