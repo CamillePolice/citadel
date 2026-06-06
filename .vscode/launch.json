@@ -1,0 +1,63 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Nuxt Full Stack (Server + Firefox)",
+      "configurations": ["Nuxt Server (Node)", "Nuxt (Firefox)"]
+    }
+  ],
+  "configurations": [
+    {
+      "name": "Nuxt Server (Node)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+      "args": ["dev"],
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**"],
+      "outFiles": [
+        "${workspaceFolder}/.nuxt/**/*.js",
+        "${workspaceFolder}/.output/**/*.js"
+      ],
+      "sourceMaps": true
+    },
+    {
+      "name": "Nuxt Server (Attach 9229)",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Nuxt (Firefox)",
+      "type": "firefox",
+      "request": "launch",
+      "url": "http://localhost:3000/",
+      "webRoot": "${workspaceFolder}",
+      "pathMappings": [
+        {
+          "url": "http://localhost:3000/_nuxt/",
+          "path": "${workspaceFolder}/app/"
+        },
+        {
+          "url": "http://localhost:3000/_nuxt/@fs/",
+          "path": "/"
+        },
+        {
+          "url": "virtual:nuxt%2F",
+          "path": "/"
+        },
+        {
+          "url": "http://localhost:3000/",
+          "path": "${workspaceFolder}/"
+        }
+      ],
+      "reAttach": true,
+      "reloadOnAttach": true
+    }
+  ]
+}

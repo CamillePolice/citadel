@@ -1,0 +1,167 @@
+{
+  "folders": [
+    { "name": "🏛️ Citadel", "path": ".." }
+  ],
+  "extensions": {
+    "recommendations": [
+      "Vue.volar",
+      "Vue.vscode-typescript-vue-plugin",
+      "sdras.vue-vscode-snippets",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "christian-kohler.path-intellisense",
+      "eamodio.gitlens",
+      "ms-azuretools.vscode-docker",
+      "mtxr.sqltools",
+      "mtxr.sqltools-driver-pg",
+      "humao.rest-client"
+    ],
+    "unwantedRecommendations": ["octref.vetur"]
+  },
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/build": true,
+      "**/dist": true,
+      "**/.git": false,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
+      "**/.nyc_output": true,
+      "**/coverage": true,
+      "**/.nuxt": true,
+      "**/.output": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/vendor/**/Tests": true,
+      "**/vendor/**/tests": true,
+      "**/build": true,
+      "**/dist": true,
+      "**/coverage": true,
+      "**/.git": true,
+      "**/.nuxt": true,
+      "**/.output": true
+    },
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/vendor/**": true,
+      "**/build/**": true,
+      "**/dist/**": true,
+      "**/.venv/**": true,
+      "**/.nuxt/**": true,
+      "**/.output/**": true
+    },
+    "files.eol": "\n",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.autoSave": "onFocusChange",
+    "files.autoSaveDelay": 1000,
+    "files.associations": {
+      "*.yml": "yaml",
+      "*.env*": "dotenv",
+      "*.conf": "properties",
+      "docker-compose*.yml": "dockercompose",
+      "Dockerfile*": "dockerfile",
+      ".prettierrc": "json",
+      ".eslintrc": "jsonc",
+      "*.sql": "sql"
+    },
+
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "terminal.integrated.fontSize": 14,
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.cursorStyle": "line",
+    "terminal.integrated.scrollback": 10000,
+
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.autofetch": true,
+    "git.openRepositoryInParentFolders": "always",
+    "git.pruneOnFetch": true,
+    "git.fetchOnPull": true,
+    "git.branchProtection": ["main", "master", "develop"],
+    "git.inputValidation": true,
+    "git.showPushSuccessNotification": true,
+
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false,
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[vue]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+
+    "eslint.format.enable": false,
+    "eslint.useFlatConfig": true,
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "vue"],
+    "eslint.workingDirectories": ["."],
+    "eslint.debug": true,
+    "prettier.requireConfig": true,
+    "prettier.configPath": ".prettierrc",
+
+    "vue.server.hybridMode": true,
+
+    "search.smartCase": true,
+    "search.useIgnoreFiles": true,
+    "search.followSymlinks": false,
+    "search.quickOpen.includeSymbols": true,
+
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.revealIfOpen": true,
+    "workbench.editor.limit.enabled": true,
+    "workbench.editor.limit.value": 10,
+    "workbench.settings.enableNaturalLanguageSearch": false,
+    "workbench.startupEditor": "none",
+    "workbench.iconTheme": "material-icon-theme",
+
+    "security.workspace.trust.enabled": true,
+    "security.workspace.trust.untrustedFiles": "prompt",
+    "security.workspace.trust.startupPrompt": "always",
+
+    "extensions.ignoreRecommendations": false,
+    "extensions.autoUpdate": false,
+
+    "emmet.includeLanguages": {
+      "typescript": "html",
+      "javascript": "html",
+      "vue": "html"
+    },
+    "emmet.triggerExpansionOnTab": true,
+    "emmet.showExpandedAbbreviation": "inMarkupAndStylesheetFilesOnly",
+
+    "breadcrumbs.enabled": true,
+    "breadcrumbs.symbolPath": "on",
+
+    "problems.autoReveal": true,
+    "problems.showCurrentInStatus": true,
+
+    "peacock.color": "#2a1a3e",
+    "workbench.colorCustomizations": {
+      "activityBar.activeBackground": "#3d2a5c",
+      "activityBar.background": "#3d2a5c",
+      "activityBar.foreground": "#e7e7e7",
+      "activityBar.inactiveForeground": "#e7e7e799",
+      "activityBarBadge.background": "#3d2a5c",
+      "activityBarBadge.foreground": "#e7e7e7",
+      "commandCenter.border": "#e7e7e799",
+      "sash.hoverBorder": "#3d2a5c",
+      "statusBar.background": "#2a1a3e",
+      "statusBar.foreground": "#e7e7e7",
+      "statusBarItem.hoverBackground": "#3d2a5c",
+      "statusBarItem.remoteBackground": "#2a1a3e",
+      "statusBarItem.remoteForeground": "#e7e7e7",
+      "titleBar.activeBackground": "#2a1a3e",
+      "titleBar.activeForeground": "#e7e7e7",
+      "titleBar.inactiveBackground": "#2a1a3e99",
+      "titleBar.inactiveForeground": "#e7e7e799"
+    }
+  }
+}
