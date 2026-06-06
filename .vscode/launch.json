@@ -18,10 +18,7 @@
       "console": "integratedTerminal",
       "autoAttachChildProcesses": true,
       "skipFiles": ["<node_internals>/**"],
-      "outFiles": [
-        "${workspaceFolder}/.nuxt/**/*.js",
-        "${workspaceFolder}/.output/**/*.js"
-      ],
+      "outFiles": ["${workspaceFolder}/.nuxt/**/*.js", "${workspaceFolder}/.output/**/*.js"],
       "sourceMaps": true
     },
     {

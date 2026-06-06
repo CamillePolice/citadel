@@ -1,0 +1,5 @@
+.nuxt
+.output
+drizzle/
+pnpm-lock.yaml
+node_modules
