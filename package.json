@@ -15,12 +15,14 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "worker": "tsx server/tasks/refresh-prices.ts"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
     "node-cron": "4.2.1",
     "nuxt": "4.4.7",
+    "oauth-1.0a": "^2.2.6",
     "postgres": "3.4.9",
     "vue": "3.5.35",
     "vue-router": "5.1.0",
