@@ -80,6 +80,7 @@ export interface PriceHistoryPoint {
   capturedAt: string
   condition: 'new' | 'used'
   source: PriceSource
+  guideType: 'sold' | 'stock' | 'listing'
   avgPrice: number | null
   minPrice: number | null
   maxPrice: number | null
