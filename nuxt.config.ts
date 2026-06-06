@@ -3,7 +3,12 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
   },
-  modules: ['@nuxt/eslint'],
+  modules: ['@nuxt/eslint', '@pinia/nuxt', '@nuxtjs/tailwindcss'],
+  css: ['~/assets/css/main.css'],
+  tailwindcss: {
+    cssPath: '~/assets/css/main.css',
+    configPath: 'tailwind.config.ts',
+  },
   runtimeConfig: {
     authHeaderUid: 'x-authentik-uid',
     authHeaderEmail: 'x-authentik-email',
