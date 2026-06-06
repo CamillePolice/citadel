@@ -1,7 +1,8 @@
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '../db'
-import { userItems } from '../db/schema'
-import { normalizeSetNo } from '../utils/pricing'
+import { catalogSets, userItems } from '../db/schema'
+import { normalizeSetNo, latestPriceFor } from '../utils/pricing'
 import { ensureCatalogSet } from '../utils/catalog'
 
 const bodySchema = z.object({
@@ -49,6 +50,38 @@ export default defineEventHandler(async (event) => {
     })
     .returning()
 
+  const [catalog] = await db
+    .select({ name: catalogSets.name, theme: catalogSets.theme, imageUrl: catalogSets.imageUrl })
+    .from(catalogSets)
+    .where(eq(catalogSets.setNo, setNo))
+    .limit(1)
+
+  const price = await latestPriceFor(setNo, created.condition)
+  const purchasePriceNum = created.purchasePrice != null ? Number(created.purchasePrice) : null
+  const qty = created.quantity ?? 1
+  const currentValue = price ? price.avgPrice * qty : 0
+  const cost = (purchasePriceNum ?? 0) * qty
+  const pnl = price ? currentValue - cost : 0
+  const pnlPct = price && cost > 0 ? (pnl / cost) * 100 : 0
+
   setResponseStatus(event, 201)
-  return created
+  return {
+    id: created.id,
+    setNo: created.setNo,
+    name: catalog?.name ?? null,
+    theme: catalog?.theme ?? null,
+    imageUrl: catalog?.imageUrl ?? null,
+    condition: created.condition,
+    quantity: qty,
+    completeness: created.completeness,
+    purchasePrice: purchasePriceNum,
+    purchaseDate: created.purchaseDate,
+    storageLocation: created.storageLocation,
+    notes: created.notes,
+    currentValue,
+    pnl,
+    pnlPct,
+    priceSource: price?.source ?? 'bricklink',
+    degraded: !price,
+  }
 })
