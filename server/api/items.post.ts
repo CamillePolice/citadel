@@ -12,10 +12,10 @@ const bodySchema = z.object({
   hasBox: z.boolean().optional(),
   hasInstructions: z.boolean().optional(),
   hasMinifigs: z.boolean().optional(),
-  purchasePrice: z.number().nonnegative().optional(),
-  purchaseDate: z.string().optional(),
-  storageLocation: z.string().optional(),
-  notes: z.string().optional(),
+  purchasePrice: z.number().nonnegative().nullish(),
+  purchaseDate: z.string().nullish(),
+  storageLocation: z.string().nullish(),
+  notes: z.string().nullish(),
 })
 
 export default defineEventHandler(async (event) => {
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
       hasInstructions: body.hasInstructions,
       hasMinifigs: body.hasMinifigs,
       purchasePrice: body.purchasePrice != null ? String(body.purchasePrice) : null,
-      purchaseDate: body.purchaseDate,
+      purchaseDate: body.purchaseDate || null,
       storageLocation: body.storageLocation,
       notes: body.notes,
     })

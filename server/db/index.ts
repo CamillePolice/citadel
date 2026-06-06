@@ -1,5 +1,6 @@
 import postgres from 'postgres'
 import { drizzle } from 'drizzle-orm/postgres-js'
+import { sql } from 'drizzle-orm'
 import * as schema from './schema'
 
 type DrizzleDb = ReturnType<typeof drizzle<typeof schema>>
@@ -26,7 +27,7 @@ export const db = new Proxy({} as DrizzleDb, {
 
 export async function pingDb(): Promise<boolean> {
   try {
-    await getDb().execute('SELECT 1' as unknown as Parameters<DrizzleDb['execute']>[0])
+    await getDb().execute(sql`SELECT 1`)
     return true
   } catch {
     return false
