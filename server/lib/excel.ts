@@ -156,7 +156,7 @@ export async function buildWorkbook(userId: string): Promise<Buffer> {
   wb.creator = 'Citadel'
   wb.created = new Date()
 
-  const ws1 = wb.addWorksheet('Scellé / Neuf', { views: [{ state: 'frozen', ySplit: 1 }] })
+  const ws1 = wb.addWorksheet('Scellé-Neuf', { views: [{ state: 'frozen', ySplit: 1 }] })
   ws1.columns = [
     { header: 'N° set', key: 'setNo', width: 12 },
     { header: 'Nom', key: 'name', width: 34 },
