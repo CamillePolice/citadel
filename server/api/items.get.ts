@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
 
       const currentValue = price ? price.avgPrice * qty : 0
       const pnl = price ? currentValue - cost : 0
-      const pnlPct = price && cost > 0 ? pnl / cost : 0
+      const pnlPct = price && cost > 0 ? (pnl / cost) * 100 : 0
 
       return {
         ...r,

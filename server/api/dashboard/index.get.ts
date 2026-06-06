@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
     const price = await latestPriceFor(r.setNo, r.condition)
     const value = price ? price.avgPrice * qty : 0
     const pnl = price ? value - cost : 0
-    const pnlPct = price && cost > 0 ? pnl / cost : 0
+    const pnlPct = price && cost > 0 ? (pnl / cost) * 100 : 0
 
     totalValue += value
     totalCost += cost
@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const pnl = totalValue - totalCost
-  const roi = totalCost > 0 ? pnl / totalCost : 0
+  const roi = totalCost > 0 ? (pnl / totalCost) * 100 : 0
   const avgValuePerItem = numItems > 0 ? totalValue / numItems : 0
 
   const byTheme = [...themeMap.entries()]
