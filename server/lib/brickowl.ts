@@ -9,12 +9,6 @@ export interface BrickOwlPriceData {
   currency: 'GBP'
 }
 
-interface CatalogListItem {
-  boid: string
-  name?: string
-  type?: string
-}
-
 interface PricesResponse {
   lowest_listing_price?: string
   new_min?: string
@@ -31,28 +25,23 @@ function parseGbp(...vals: Array<string | undefined>): number | null {
 }
 
 async function lookupBoid(setNo: string, key: string): Promise<string | null> {
-  const url = `${BASE_URL}/catalog/list?key=${encodeURIComponent(key)}&query=${encodeURIComponent(setNo)}&type=Set`
+  const base = setNo.split('-')[0]
+  const url = `${BASE_URL}/catalog/id_lookup?key=${encodeURIComponent(key)}&id=${encodeURIComponent(base)}&type=Set`
   let res: Response
   try {
     res = await fetch(url)
   } catch (err) {
-    console.warn(`[brickowl] ${setNo} list network error:`, (err as Error).message)
-    return null
-  }
-  if (res.status === 404) {
-    console.warn(`[brickowl] ${setNo} not found in catalog (404)`)
+    console.warn(`[brickowl] ${setNo} lookup network error:`, (err as Error).message)
     return null
   }
   if (!res.ok) {
-    console.warn(`[brickowl] ${setNo} list HTTP ${res.status}`)
+    console.warn(`[brickowl] ${setNo} lookup HTTP ${res.status}`)
     return null
   }
-  const list = (await res.json()) as CatalogListItem[]
-  if (!Array.isArray(list) || list.length === 0) {
-    console.warn(`[brickowl] ${setNo} no catalog match`)
-    return null
-  }
-  return list[0].boid ?? null
+  const data = (await res.json()) as { boids?: string[] }
+  const boid = data.boids?.[0] ?? null
+  if (!boid) console.warn(`[brickowl] ${setNo} no BOID found`)
+  return boid
 }
 
 export async function fetchBrickOwlPrice(setNo: string): Promise<BrickOwlPriceData | null> {
