@@ -14,17 +14,22 @@ const chartData = computed<ChartData<'line'>>(() => ({
       label: 'Valeur',
       data: props.history.map((p) => p.totalValue),
       borderColor: '#7c5cff',
-      backgroundColor: 'rgba(124,92,255,0.15)',
+      backgroundColor: 'rgba(124,92,255,0.25)',
+      borderWidth: 2,
       fill: true,
       tension: 0.25,
+      pointRadius: 4,
+      pointHoverRadius: 6,
     },
     {
       label: 'Coût',
       data: props.history.map((p) => p.totalCost),
-      borderColor: '#8b81a8',
+      borderColor: '#f0506e',
       borderDash: [4, 4],
+      borderWidth: 2,
       fill: false,
       tension: 0.25,
+      pointRadius: 3,
     },
   ],
 }))
@@ -32,8 +37,24 @@ const chartData = computed<ChartData<'line'>>(() => ({
 const options: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { position: 'bottom' } },
-  scales: { x: { grid: { display: false } } },
+  plugins: {
+    legend: { position: 'bottom' },
+    tooltip: {
+      callbacks: {
+        label: (ctx) =>
+          `${ctx.dataset.label}: ${(ctx.parsed.y ?? 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}`,
+      },
+    },
+  },
+  scales: {
+    x: { grid: { display: false } },
+    y: {
+      ticks: {
+        callback: (v) =>
+          Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }),
+      },
+    },
+  },
 }
 </script>
 

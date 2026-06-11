@@ -44,6 +44,27 @@ const chartData = computed<ChartData<'line'>>(() => {
     }
   })
 
+  const avgData = labels.value.map((date) => {
+    const vals = sorted.value
+      .filter((p) => p.capturedAt === date && p.avgPrice != null)
+      .map((p) => p.avgPrice as number)
+    if (vals.length === 0) return null
+    return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100
+  })
+
+  datasets.push({
+    label: 'Moyenne toutes sources',
+    data: avgData,
+    borderColor: '#ffffff',
+    backgroundColor: 'transparent',
+    borderDash: [6, 3],
+    borderWidth: 2,
+    fill: false,
+    tension: 0.3,
+    spanGaps: true,
+    pointRadius: 2,
+  } as never)
+
   return { labels: labels.value, datasets }
 })
 
