@@ -9,6 +9,7 @@ import { fetchRebrickableSet } from '../lib/rebrickable'
 import { getGbpToEurRate, resetFxCache } from '../lib/fx'
 import { consolidate, type ConsolidatedPrice } from '../lib/consolidation'
 import { fetchAdlbPrice } from '../lib/avenuedelabrique'
+import { fetchEbayPrice } from '../lib/ebay'
 
 const schedule = process.env.CRON_SCHEDULE ?? '0 4 * * *'
 
@@ -120,7 +121,7 @@ async function recomputePortfolios(capturedAt: string): Promise<void> {
 export async function runRefresh(): Promise<void> {
   const startedAt = Date.now()
   console.log('[worker] refresh-prices: run start')
-  validateWorkerEnv()
+  const env = validateWorkerEnv()
   resetFxCache()
 
   const capturedAt = todayIso()
@@ -140,11 +141,12 @@ export async function runRefresh(): Promise<void> {
     try {
       await ensureCatalogInDb(setNo)
 
-      const [blNew, blUsed, owl, adlb] = await Promise.all([
+      const [blNew, blUsed, owl, adlb, ebay] = await Promise.all([
         fetchBricklinkPrice(setNo, 'new'),
         fetchBricklinkPrice(setNo, 'used'),
         fetchBrickOwlPrice(setNo),
         fetchAdlbPrice(setNo),
+        env.EBAY_APP_ID ? fetchEbayPrice(setNo, env.EBAY_APP_ID) : Promise.resolve([]),
       ])
 
       const prices = consolidate({
@@ -152,6 +154,7 @@ export async function runRefresh(): Promise<void> {
         bricklinkNew: blNew,
         bricklinkUsed: blUsed,
         brickowl: owl,
+        ebay,
         gbpToEur,
       })
 
