@@ -12,12 +12,12 @@ export default defineEventHandler(async (event) => {
   const setNo = normalizeSetNo(rawSetNo)
 
   const [found] = await db.select().from(catalogSets).where(eq(catalogSets.setNo, setNo)).limit(1)
-  if (found) return found
+  if (found?.name) return found
 
   await ensureCatalogSet(setNo)
 
-  const [created] = await db.select().from(catalogSets).where(eq(catalogSets.setNo, setNo)).limit(1)
-  if (created) return created
+  const [enriched] = await db.select().from(catalogSets).where(eq(catalogSets.setNo, setNo)).limit(1)
+  if (enriched) return enriched
 
   throw createError({ statusCode: 404, statusMessage: 'Set not found' })
 })

@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
 
   await ensureCatalogSet(setNo)
 
-  const [created] = await db
+  const inserted = await db
     .insert(userItems)
     .values({
       userId: user.id,
@@ -49,6 +49,11 @@ export default defineEventHandler(async (event) => {
       notes: body.notes,
     })
     .returning()
+
+  const created = inserted[0]
+  if (!created) {
+    throw createError({ statusCode: 500, statusMessage: 'Insert returned no row' })
+  }
 
   const [catalog] = await db
     .select({ name: catalogSets.name, theme: catalogSets.theme, imageUrl: catalogSets.imageUrl })
