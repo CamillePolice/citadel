@@ -92,6 +92,8 @@ async function onDelete() {
         <ChartsPriceHistoryChart v-else :points="prices" />
       </div>
 
+      <PriceListingsPanel :set-no="setNo" />
+
       <EditItemModal v-if="showEdit" :item="item" @close="showEdit = false" @saved="showEdit = false" />
     </template>
 
