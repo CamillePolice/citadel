@@ -96,8 +96,7 @@ async function upsertPriceSnapshot(p: ConsolidatedPrice, capturedAt: string): Pr
 }
 
 async function persistListings(setNo: string, listings: ConsolidatedListing[], capturedAt: string): Promise<void> {
-  const sources = [...new Set(listings.map((l) => l.source))]
-  for (const source of sources) {
+  for (const source of ['bricklink', 'ebay'] as const) {
     await db.delete(priceListings).where(and(eq(priceListings.setNo, setNo), eq(priceListings.source, source)))
   }
   if (listings.length === 0) return

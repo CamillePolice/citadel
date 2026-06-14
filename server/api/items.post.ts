@@ -86,7 +86,7 @@ export default defineEventHandler(async (event) => {
     currentValue,
     pnl,
     pnlPct,
-    priceSource: price?.source ?? 'bricklink',
+    priceSource: price?.source ?? null,
     degraded: !price,
   }
 })
