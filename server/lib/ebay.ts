@@ -14,8 +14,28 @@ export interface EbayPriceData {
 }
 
 interface EbayItem {
+  itemId?: [string]
+  title?: [string]
+  viewItemURL?: [string]
+  listingInfo?: [{ endTime?: [string] }]
   sellingStatus: [{ currentPrice: [{ '@currencyId': string; __value__: string }]; sellingState: [string] }]
   condition?: [{ conditionId: [string] }]
+}
+
+export interface EbayListing {
+  setNo: string
+  condition: 'new' | 'used'
+  sourceListingId: string | null
+  price: number
+  saleDate: string | null
+  title: string | null
+  listingUrl: string | null
+  currency: string
+}
+
+export interface EbayResult {
+  aggregates: EbayPriceData[]
+  listings: EbayListing[]
 }
 
 function isNew(conditionId: string): boolean {
@@ -30,7 +50,7 @@ function stats(prices: number[]): { min: number; avg: number; max: number } | nu
   return { min, avg, max }
 }
 
-export async function fetchEbayPrice(setNo: string, appId: string): Promise<EbayPriceData[]> {
+export async function fetchEbayPrice(setNo: string, appId: string): Promise<EbayResult> {
   const setBase = setNo.split('-')[0]
   const params = new URLSearchParams({
     'OPERATION-NAME': 'findCompletedItems',
@@ -57,12 +77,12 @@ export async function fetchEbayPrice(setNo: string, appId: string): Promise<Ebay
     })
   } catch (err) {
     console.warn(`[ebay] ${setNo} fetch error:`, (err as Error).message)
-    return []
+    return { aggregates: [], listings: [] }
   }
 
   if (!res.ok) {
     console.warn(`[ebay] ${setNo} HTTP ${res.status}`)
-    return []
+    return { aggregates: [], listings: [] }
   }
 
   let body: unknown
@@ -70,7 +90,7 @@ export async function fetchEbayPrice(setNo: string, appId: string): Promise<Ebay
     body = await res.json()
   } catch {
     console.warn(`[ebay] ${setNo} JSON parse error`)
-    return []
+    return { aggregates: [], listings: [] }
   }
 
   const resp = (body as Record<string, unknown[]>)['findCompletedItemsResponse']?.[0] as
@@ -79,17 +99,18 @@ export async function fetchEbayPrice(setNo: string, appId: string): Promise<Ebay
   const ack = resp?.['ack']?.[0]
   if (ack !== 'Success' && ack !== 'Warning') {
     console.warn(`[ebay] ${setNo} ack=${ack}`)
-    return []
+    return { aggregates: [], listings: [] }
   }
 
   const items = (resp?.['searchResult']?.[0] as Record<string, EbayItem[]> | undefined)?.['item'] ?? []
   if (items.length === 0) {
     console.warn(`[ebay] ${setNo} no results`)
-    return []
+    return { aggregates: [], listings: [] }
   }
 
   const newPrices: number[] = []
   const usedPrices: number[] = []
+  const listings: EbayListing[] = []
 
   for (const item of items) {
     const state = item.sellingStatus?.[0]?.sellingState?.[0]
@@ -100,11 +121,21 @@ export async function fetchEbayPrice(setNo: string, appId: string): Promise<Ebay
     if (!isFinite(price) || price <= 0) continue
 
     const condId = item.condition?.[0]?.conditionId?.[0] ?? '3000'
-    if (isNew(condId)) {
-      newPrices.push(price)
-    } else {
-      usedPrices.push(price)
-    }
+    const cond: 'new' | 'used' = isNew(condId) ? 'new' : 'used'
+    if (cond === 'new') newPrices.push(price)
+    else usedPrices.push(price)
+
+    const endTime = item.listingInfo?.[0]?.endTime?.[0] ?? null
+    listings.push({
+      setNo,
+      condition: cond,
+      sourceListingId: item.itemId?.[0] ?? null,
+      price,
+      saleDate: endTime ? endTime.slice(0, 10) : null,
+      title: item.title?.[0] ?? null,
+      listingUrl: item.viewItemURL?.[0] ?? null,
+      currency: 'EUR',
+    })
   }
 
   const result: EbayPriceData[] = []
@@ -120,5 +151,5 @@ export async function fetchEbayPrice(setNo: string, appId: string): Promise<Ebay
     result.push({ setNo, condition: 'used', ...usedStats, qtySold: usedPrices.length, currency })
   }
 
-  return result
+  return { aggregates: result, listings }
 }
