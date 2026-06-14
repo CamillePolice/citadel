@@ -101,3 +101,21 @@ export interface CreateItemPayload {
 }
 
 export type UpdateItemPayload = Partial<Omit<CreateItemPayload, 'setNo'>>
+
+export interface PriceListing {
+  id: string
+  condition: 'new' | 'used'
+  source: 'bricklink' | 'ebay'
+  price: number
+  currency: string | null
+  saleDate: string | null
+  listingUrl: string | null
+  title: string | null
+}
+
+export interface PriceListingsResponse {
+  total: number
+  page: number
+  pageSize: number
+  items: PriceListing[]
+}
