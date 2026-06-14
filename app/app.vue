@@ -11,7 +11,10 @@ onMounted(() => user.fetchMe())
     <header class="border-b border-imperial-border bg-imperial-surface">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <NuxtLink to="/dashboard" class="text-lg font-semibold text-imperial-accent">Citadel</NuxtLink>
-        <span class="text-sm text-imperial-muted">{{ user.displayName }}</span>
+        <div class="flex items-center gap-4">
+          <NuxtLink to="/aide" class="text-sm text-imperial-muted hover:text-imperial-text">Aide</NuxtLink>
+          <span class="text-sm text-imperial-muted">{{ user.displayName }}</span>
+        </div>
       </div>
     </header>
     <main class="mx-auto max-w-6xl px-4 py-6">
