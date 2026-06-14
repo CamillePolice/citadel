@@ -36,12 +36,30 @@ function parseIntSafe(s: string): number | null {
   return isFinite(n) && n >= 0 ? n : null
 }
 
-function extractStatBlocks(section: string): StatBlock[] {
-  const blocks: StatBlock[] = []
-  // Each block is a <TABLE ... CLASS="fv"> containing price rows
+interface LabeledStatBlock {
+  condition: 'new' | 'used' | null
+  stats: StatBlock
+}
+
+function extractStatBlocks(section: string): LabeledStatBlock[] {
+  const blocks: LabeledStatBlock[] = []
   const blockRe = /CLASS="fv">([\s\S]*?)<\/TABLE>/g
   let m: RegExpExecArray | null
   while ((m = blockRe.exec(section)) !== null) {
+    const tableStart = m.index
+    // Look back up to 800 chars to find nearest "New" or "Used" condition label
+    const lookback = section.slice(Math.max(0, tableStart - 800), tableStart)
+    const newIdx = lookback.search(/\bNew\b/)
+    const usedIdx = lookback.search(/\bUsed\b/)
+    let condition: 'new' | 'used' | null = null
+    if (newIdx !== -1 || usedIdx !== -1) {
+      // Use whichever label appears latest (closest to the table)
+      const lastNew = lookback.lastIndexOf('New')
+      const lastUsed = lookback.lastIndexOf('Used')
+      if (lastNew > lastUsed) condition = 'new'
+      else condition = 'used'
+    }
+
     const b = m[1]
     const get = (label: string) => {
       const r = new RegExp(label + '[^<]*<\\/TD><TD[^>]*><B>([^<]+)<\\/B>')
@@ -58,12 +76,15 @@ function extractStatBlocks(section: string): StatBlock[] {
     const stripCurrency = (v: string | null) => (v ? v.replace(/[A-Z]{3}[&nbsp;\s;]*/g, '').trim() : null)
 
     blocks.push({
-      timesSold: soldRaw ? parseIntSafe(soldRaw) : null,
-      totalQty: qtyRaw ? parseIntSafe(qtyRaw) : null,
-      minPrice: minRaw ? parseNum(stripCurrency(minRaw) ?? '') : null,
-      avgPrice: avgRaw ? parseNum(stripCurrency(avgRaw) ?? '') : null,
-      qtyAvgPrice: qtyAvgRaw ? parseNum(stripCurrency(qtyAvgRaw) ?? '') : null,
-      maxPrice: maxRaw ? parseNum(stripCurrency(maxRaw) ?? '') : null,
+      condition,
+      stats: {
+        timesSold: soldRaw ? parseIntSafe(soldRaw) : null,
+        totalQty: qtyRaw ? parseIntSafe(qtyRaw) : null,
+        minPrice: minRaw ? parseNum(stripCurrency(minRaw) ?? '') : null,
+        avgPrice: avgRaw ? parseNum(stripCurrency(avgRaw) ?? '') : null,
+        qtyAvgPrice: qtyAvgRaw ? parseNum(stripCurrency(qtyAvgRaw) ?? '') : null,
+        maxPrice: maxRaw ? parseNum(stripCurrency(maxRaw) ?? '') : null,
+      },
     })
   }
   return blocks
@@ -108,6 +129,70 @@ async function getHtml(setNo: string): Promise<string | null> {
   return html
 }
 
+export interface BricklinkListing {
+  condition: PriceCondition
+  price: number
+  saleDate: string | null
+  currency: string
+}
+
+function parseDate(s: string): string | null {
+  const iso = s.match(/(\d{4})-(\d{2})-(\d{2})/)
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
+  const us = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/)
+  if (us) {
+    const mm = us[1].padStart(2, '0')
+    const dd = us[2].padStart(2, '0')
+    return `${us[3]}-${mm}-${dd}`
+  }
+  return null
+}
+
+function extractListingRows(section: string, condition: PriceCondition): BricklinkListing[] {
+  const out: BricklinkListing[] = []
+  const tableRe = /CLASS="fv">([\s\S]*?)<\/TABLE>/g
+  let m: RegExpExecArray | null
+  while ((m = tableRe.exec(section)) !== null) {
+    const body = m[1]
+    const rows = [...body.matchAll(/<TR[^>]*>([\s\S]*?)<\/TR>/g)]
+    const priced = rows.filter((r) => /[A-Z]{3}&nbsp;[\d,]+\.\d{2}/.test(r[1]))
+    if (priced.length < 2) continue
+    for (const r of priced) {
+      const cells = [...r[1].matchAll(/<TD[^>]*>([\s\S]*?)<\/TD>/g)].map((c) =>
+        c[1]
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/&nbsp;/g, ' ')
+          .trim(),
+      )
+      const priceCell = cells.find((c) => /[A-Z]{3}\s*[\d,]+\.\d{2}/.test(c))
+      if (!priceCell) continue
+      const price = parseNum(priceCell.replace(/[A-Z]{3}/g, '').replace(/[^\d.,]/g, ''))
+      if (price == null) continue
+      const dateCell = cells.find((c) => /\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4}/.test(c))
+      out.push({
+        condition,
+        price,
+        saleDate: dateCell ? parseDate(dateCell) : null,
+        currency: section.match(/([A-Z]{3})&nbsp;[\d,]+\.\d{2}/)?.[1] ?? 'EUR',
+      })
+    }
+    break
+  }
+  return out
+}
+
+export async function fetchBricklinkListings(setNo: string, condition: PriceCondition): Promise<BricklinkListing[]> {
+  const html = await getHtml(setNo)
+  if (!html) return []
+  const soldMarker = 'Last 6 Months Sales:'
+  const soldIdx = html.indexOf(soldMarker)
+  if (soldIdx === -1) return []
+  const section = html.slice(soldIdx, soldIdx + 40_000)
+  const condIdx = section.search(new RegExp(`\\b${condition === 'new' ? 'New' : 'Used'}\\b`))
+  const condSlice = condIdx !== -1 ? section.slice(condIdx) : section
+  return extractListingRows(condSlice, condition)
+}
+
 export async function fetchBricklinkPrice(setNo: string, condition: PriceCondition): Promise<PriceGuideData | null> {
   const html = await getHtml(setNo)
   if (!html) return null
@@ -123,12 +208,14 @@ export async function fetchBricklinkPrice(setNo: string, condition: PriceConditi
   const section = html.slice(soldIdx, soldIdx + 10_000)
   const blocks = extractStatBlocks(section)
 
-  // blocks[0]=New sold, blocks[1]=Used sold, blocks[2]=New listing, blocks[3]=Used listing
-  const block = condition === 'new' ? blocks[0] : blocks[1]
-  if (!block) {
-    console.warn(`[bricklink] ${setNo}/${condition}: stat block not found (got ${blocks.length} blocks)`)
+  const labeled = blocks.find((b) => b.condition === condition)
+  if (!labeled) {
+    console.warn(
+      `[bricklink] ${setNo}/${condition}: stat block not found (got ${blocks.length} blocks, conditions=[${blocks.map((b) => b.condition).join(',')}])`,
+    )
     return null
   }
+  const block = labeled.stats
 
   const currency = detectCurrency(section)
 
