@@ -1,0 +1,101 @@
+services:
+  citadel-db:
+    image: postgres:17-alpine
+    container_name: citadel-db
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Paris
+      - POSTGRES_USER=citadel
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=citadel
+    volumes:
+      - citadel_db_data:/var/lib/postgresql/data
+      # Variante bind-mount si tu préfères les données sur un volume NAS :
+      # - /volume4/docker/citadel/db:/var/lib/postgresql/data
+    networks:
+      - citadel_internal
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U citadel -d citadel']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Pas de "ports:" : la DB n'est joignable que sur le réseau interne
+
+  citadel-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Alternative CI : image construite et poussée sur ton registre GitLab
+    # image: registry.camillepolice.com/citadel/app:latest
+    container_name: citadel-app
+    restart: unless-stopped
+    depends_on:
+      citadel-db:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+      - NODE_ENV=production
+      - NITRO_PORT=3000
+      - DATABASE_URL=postgres://citadel:${POSTGRES_PASSWORD}@citadel-db:5432/citadel
+      # Identité de confiance injectée par Authentik via Traefik (forward auth)
+      - AUTH_HEADER_UID=x-authentik-uid
+      - AUTH_HEADER_EMAIL=x-authentik-email
+      - AUTH_HEADER_USERNAME=x-authentik-username
+      - AUTH_HEADER_GROUPS=x-authentik-groups
+      # Groupe Authentik donnant le rôle admin (optionnel)
+      - ADMIN_GROUP=citadel-admins
+    networks:
+      - traefik_proxy
+      - citadel_internal
+    labels:
+      - 'traefik.enable=true'
+      # --- Route principale ---
+      - 'traefik.http.routers.citadel.rule=Host(`citadel.camillepolice.com`)'
+      - 'traefik.http.routers.citadel.entrypoints=websecure'
+      - 'traefik.http.routers.citadel.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.citadel.middlewares=default-headers@docker,authentik@file'
+      - 'traefik.http.services.citadel.loadbalancer.server.port=3000'
+    # Pas de "ports:" : l'app n'est joignable QUE via Traefik.
+    # C'est ce qui garantit que les en-têtes X-authentik-* viennent bien
+    # de l'outpost et ne peuvent pas être spoofés depuis l'extérieur.
+
+  citadel-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # image: registry.camillepolice.com/citadel/app:latest
+    container_name: citadel-worker
+    restart: unless-stopped
+    command: ['node', '.output/worker.mjs']
+    depends_on:
+      citadel-db:
+        condition: service_healthy
+    environment:
+      - TZ=Europe/Paris
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://citadel:${POSTGRES_PASSWORD}@citadel-db:5432/citadel
+      # Planification du rafraîchissement des prix (cron, fuseau TZ ci-dessus)
+      - CRON_SCHEDULE=0 4 * * *
+      # BrickLink Price Guide API (OAuth 1.0a)
+      - BRICKLINK_CONSUMER_KEY=${BRICKLINK_CONSUMER_KEY}
+      - BRICKLINK_CONSUMER_SECRET=${BRICKLINK_CONSUMER_SECRET}
+      - BRICKLINK_TOKEN=${BRICKLINK_TOKEN}
+      - BRICKLINK_TOKEN_SECRET=${BRICKLINK_TOKEN_SECRET}
+      - BRICKLINK_CURRENCY=EUR
+      # Rebrickable (enrichissement catalogue)
+      - REBRICKABLE_API_KEY=${REBRICKABLE_API_KEY}
+    networks:
+      - citadel_internal
+    # Worker interne : pas de label Traefik, pas de port exposé.
+    # Sort vers Internet via l'IP fixe de Scarif -> à whitelister côté BrickLink.
+
+volumes:
+  citadel_db_data:
+
+networks:
+  traefik_proxy:
+    external: true
+  citadel_internal:
+    driver: bridge

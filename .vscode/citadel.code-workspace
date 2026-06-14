@@ -1,7 +1,5 @@
 {
-  "folders": [
-    { "name": "🏛️ Citadel", "path": ".." }
-  ],
+  "folders": [{ "name": "🏛️ Citadel", "path": ".." }],
   "extensions": {
     "recommendations": [
       "Vue.volar",
@@ -15,9 +13,9 @@
       "ms-azuretools.vscode-docker",
       "mtxr.sqltools",
       "mtxr.sqltools-driver-pg",
-      "humao.rest-client"
+      "humao.rest-client",
     ],
-    "unwantedRecommendations": ["octref.vetur"]
+    "unwantedRecommendations": ["octref.vetur"],
   },
   "settings": {
     "files.exclude": {
@@ -30,7 +28,7 @@
       "**/.nyc_output": true,
       "**/coverage": true,
       "**/.nuxt": true,
-      "**/.output": true
+      "**/.output": true,
     },
     "search.exclude": {
       "**/node_modules": true,
@@ -41,7 +39,7 @@
       "**/coverage": true,
       "**/.git": true,
       "**/.nuxt": true,
-      "**/.output": true
+      "**/.output": true,
     },
     "files.watcherExclude": {
       "**/node_modules/**": true,
@@ -50,7 +48,7 @@
       "**/dist/**": true,
       "**/.venv/**": true,
       "**/.nuxt/**": true,
-      "**/.output/**": true
+      "**/.output/**": true,
     },
     "files.eol": "\n",
     "files.trimTrailingWhitespace": true,
@@ -66,7 +64,7 @@
       "Dockerfile*": "dockerfile",
       ".prettierrc": "json",
       ".eslintrc": "jsonc",
-      "*.sql": "sql"
+      "*.sql": "sql",
     },
 
     "terminal.integrated.cwd": "${workspaceFolder}",
@@ -88,15 +86,15 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": false,
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit"
+      "source.fixAll.eslint": "explicit",
     },
     "editor.tabSize": 2,
     "editor.detectIndentation": false,
     "[typescript]": {
-      "editor.defaultFormatter": "esbenp.prettier-vscode"
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "[vue]": {
-      "editor.defaultFormatter": "esbenp.prettier-vscode"
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
 
     "eslint.format.enable": false,
@@ -132,7 +130,7 @@
     "emmet.includeLanguages": {
       "typescript": "html",
       "javascript": "html",
-      "vue": "html"
+      "vue": "html",
     },
     "emmet.triggerExpansionOnTab": true,
     "emmet.showExpandedAbbreviation": "inMarkupAndStylesheetFilesOnly",
@@ -161,7 +159,7 @@
       "titleBar.activeBackground": "#2a1a3e",
       "titleBar.activeForeground": "#e7e7e7",
       "titleBar.inactiveBackground": "#2a1a3e99",
-      "titleBar.inactiveForeground": "#e7e7e799"
-    }
-  }
+      "titleBar.inactiveForeground": "#e7e7e799",
+    },
+  },
 }
