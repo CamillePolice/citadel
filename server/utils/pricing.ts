@@ -15,8 +15,10 @@ export function itemToPriceCondition(condition: 'new_sealed' | 'used' | null): '
 
 export interface LatestPrice {
   avgPrice: number
-  source: 'bricklink' | 'brickowl'
+  source: 'bricklink' | 'brickowl' | 'avenuedelabrique'
 }
+
+type SourceSpec = { source: 'bricklink' | 'brickowl' | 'avenuedelabrique'; guideType: 'sold' | 'stock' | 'listing' }
 
 export async function latestPriceFor(
   setNo: string,
@@ -25,7 +27,19 @@ export async function latestPriceFor(
   const priceCondition = itemToPriceCondition(itemCondition)
   if (!priceCondition) return null
 
-  for (const source of ['bricklink', 'brickowl'] as const) {
+  const sourcePriority: SourceSpec[] =
+    itemCondition === 'new_sealed'
+      ? [
+          { source: 'avenuedelabrique', guideType: 'listing' },
+          { source: 'bricklink', guideType: 'sold' },
+          { source: 'brickowl', guideType: 'sold' },
+        ]
+      : [
+          { source: 'bricklink', guideType: 'sold' },
+          { source: 'brickowl', guideType: 'sold' },
+        ]
+
+  for (const { source, guideType } of sourcePriority) {
     const [row] = await db
       .select({ avgPrice: priceSnapshots.avgPrice })
       .from(priceSnapshots)
@@ -34,7 +48,7 @@ export async function latestPriceFor(
           eq(priceSnapshots.setNo, setNo),
           eq(priceSnapshots.condition, priceCondition),
           eq(priceSnapshots.source, source),
-          eq(priceSnapshots.guideType, 'sold'),
+          eq(priceSnapshots.guideType, guideType),
         ),
       )
       .orderBy(desc(priceSnapshots.capturedAt))
