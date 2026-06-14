@@ -1,6 +1,6 @@
-import type { PriceGuideData } from './bricklink'
+import type { PriceGuideData, BricklinkListing } from './bricklink'
 import type { BrickOwlPriceData } from './brickowl'
-import type { EbayPriceData } from './ebay'
+import type { EbayPriceData, EbayResult, EbayListing } from './ebay'
 
 export interface ConsolidatedPrice {
   setNo: string
@@ -23,7 +23,7 @@ interface ConsolidateInput {
   bricklinkNew: PriceGuideData | null
   bricklinkUsed: PriceGuideData | null
   brickowl: BrickOwlPriceData | null
-  ebay: EbayPriceData[]
+  ebay: EbayResult
   gbpToEur: number
 }
 
@@ -92,7 +92,7 @@ export function consolidate(input: ConsolidateInput): ConsolidatedPrice[] {
   if (hasUsablePrice(input.bricklinkNew)) out.push(fromBricklink(input.bricklinkNew))
   if (hasUsablePrice(input.bricklinkUsed)) out.push(fromBricklink(input.bricklinkUsed))
 
-  for (const e of input.ebay) {
+  for (const e of input.ebay.aggregates) {
     if (e.avgPrice > 0) out.push(fromEbay(e))
   }
 
@@ -101,5 +101,58 @@ export function consolidate(input: ConsolidateInput): ConsolidatedPrice[] {
     out.push(fromBrickowl(input.setNo, input.brickowl, input.gbpToEur))
   }
 
+  return out
+}
+
+export interface ConsolidatedListing {
+  setNo: string
+  condition: 'new' | 'used'
+  source: 'bricklink' | 'ebay'
+  sourceListingId: string | null
+  price: number
+  currency: 'EUR'
+  saleDate: string | null
+  listingUrl: string | null
+  title: string | null
+}
+
+interface ListingsInput {
+  setNo: string
+  bricklink: BricklinkListing[]
+  ebay: EbayListing[]
+}
+
+export function consolidateListings(input: ListingsInput): ConsolidatedListing[] {
+  const out: ConsolidatedListing[] = []
+  for (const b of input.bricklink) {
+    if (b.price > 0) {
+      out.push({
+        setNo: input.setNo,
+        condition: b.condition,
+        source: 'bricklink',
+        sourceListingId: null,
+        price: b.price,
+        currency: 'EUR',
+        saleDate: b.saleDate,
+        listingUrl: null,
+        title: null,
+      })
+    }
+  }
+  for (const e of input.ebay) {
+    if (e.price > 0) {
+      out.push({
+        setNo: input.setNo,
+        condition: e.condition,
+        source: 'ebay',
+        sourceListingId: e.sourceListingId,
+        price: e.price,
+        currency: 'EUR',
+        saleDate: e.saleDate,
+        listingUrl: e.listingUrl,
+        title: e.title,
+      })
+    }
+  }
   return out
 }
