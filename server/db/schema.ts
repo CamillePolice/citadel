@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, uuid, numeric, integer, boolean, date, uniqueIndex } from 'drizzle-orm/pg-core'
+import { pgEnum, pgTable, text, uuid, numeric, integer, boolean, date, uniqueIndex, index } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 export const conditionItemEnum = pgEnum('condition_item', ['new_sealed', 'used'])
@@ -83,6 +83,31 @@ export const priceSnapshots = pgTable(
   },
   (t) => ({
     uniqueSnapshot: uniqueIndex('price_snapshots_unique').on(t.setNo, t.condition, t.source, t.guideType, t.capturedAt),
+  }),
+)
+
+export const priceListings = pgTable(
+  'price_listings',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    setNo: text('set_no')
+      .notNull()
+      .references(() => catalogSets.setNo),
+    condition: conditionPriceEnum('condition').notNull(),
+    source: priceSourceEnum('source').notNull(),
+    sourceListingId: text('source_listing_id'),
+    price: numeric('price').notNull(),
+    currency: text('currency').default('EUR'),
+    saleDate: date('sale_date'),
+    listingUrl: text('listing_url'),
+    title: text('title'),
+    capturedAt: date('captured_at').notNull(),
+  },
+  (t) => ({
+    uniqueListing: uniqueIndex('price_listings_unique').on(t.setNo, t.source, t.condition, t.sourceListingId),
+    setSourceIdx: index('price_listings_set_source_idx').on(t.setNo, t.source),
   }),
 )
 
