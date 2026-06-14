@@ -68,5 +68,14 @@
         sources confondues.
       </p>
     </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-medium">Transactions individuelles</h2>
+      <p class="text-sm leading-relaxed text-imperial-muted">
+        Sur la fiche de chaque set, un tableau liste les ventes individuelles collectées sur BrickLink et eBay : date de
+        vente, état (neuf/occasion), prix et lien vers l'annonce d'origine. Ces transactions sont récupérées chaque nuit
+        en même temps que les prix agrégés, et peuvent être filtrées par source et par état.
+      </p>
+    </section>
   </div>
 </template>
