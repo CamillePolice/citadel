@@ -1,13 +1,18 @@
 import cron from 'node-cron'
-import { sql, eq } from 'drizzle-orm'
+import { sql, eq, and } from 'drizzle-orm'
 import { db } from '../db'
-import { catalogSets, priceSnapshots } from '../db/schema'
+import { catalogSets, priceSnapshots, priceListings } from '../db/schema'
 import { validateWorkerEnv } from '../utils/env'
-import { fetchBricklinkPrice } from '../lib/bricklink'
+import { fetchBricklinkPrice, fetchBricklinkListings } from '../lib/bricklink'
 import { fetchBrickOwlPrice } from '../lib/brickowl'
 import { fetchRebrickableSet } from '../lib/rebrickable'
 import { getGbpToEurRate, resetFxCache } from '../lib/fx'
-import { consolidate, type ConsolidatedPrice } from '../lib/consolidation'
+import {
+  consolidate,
+  consolidateListings,
+  type ConsolidatedPrice,
+  type ConsolidatedListing,
+} from '../lib/consolidation'
 import { fetchAdlbPrice } from '../lib/avenuedelabrique'
 import { fetchEbayPrice } from '../lib/ebay'
 
@@ -90,6 +95,28 @@ async function upsertPriceSnapshot(p: ConsolidatedPrice, capturedAt: string): Pr
     })
 }
 
+async function persistListings(setNo: string, listings: ConsolidatedListing[], capturedAt: string): Promise<void> {
+  const sources = [...new Set(listings.map((l) => l.source))]
+  for (const source of sources) {
+    await db.delete(priceListings).where(and(eq(priceListings.setNo, setNo), eq(priceListings.source, source)))
+  }
+  if (listings.length === 0) return
+  await db.insert(priceListings).values(
+    listings.map((l) => ({
+      setNo: l.setNo,
+      condition: l.condition,
+      source: l.source,
+      sourceListingId: l.sourceListingId,
+      price: String(l.price),
+      currency: l.currency,
+      saleDate: l.saleDate,
+      listingUrl: l.listingUrl,
+      title: l.title,
+      capturedAt,
+    })),
+  )
+}
+
 async function recomputePortfolios(capturedAt: string): Promise<void> {
   await db.execute(sql`
     INSERT INTO portfolio_snapshots (user_id, captured_at, total_value, total_cost, num_items)
@@ -106,7 +133,8 @@ async function recomputePortfolios(capturedAt: string): Promise<void> {
       WHERE p.set_no = ui.set_no
         AND p.condition = (CASE WHEN ui.condition = 'new_sealed' THEN 'new' ELSE 'used' END)::condition_price
         AND p.avg_price IS NOT NULL
-      ORDER BY p.captured_at DESC, (p.source = 'bricklink') DESC
+      ORDER BY p.captured_at DESC,
+        (CASE WHEN ui.condition = 'new_sealed' THEN (p.source = 'avenuedelabrique') ELSE (p.source = 'bricklink') END) DESC
       LIMIT 1
     ) ps ON TRUE
     GROUP BY ui.user_id
@@ -141,12 +169,14 @@ export async function runRefresh(): Promise<void> {
     try {
       await ensureCatalogInDb(setNo)
 
-      const [blNew, blUsed, owl, adlb, ebay] = await Promise.all([
+      const [blNew, blUsed, blListNew, blListUsed, owl, adlb, ebay] = await Promise.all([
         fetchBricklinkPrice(setNo, 'new'),
         fetchBricklinkPrice(setNo, 'used'),
+        fetchBricklinkListings(setNo, 'new'),
+        fetchBricklinkListings(setNo, 'used'),
         fetchBrickOwlPrice(setNo),
         fetchAdlbPrice(setNo),
-        env.EBAY_APP_ID ? fetchEbayPrice(setNo, env.EBAY_APP_ID) : Promise.resolve([]),
+        env.EBAY_APP_ID ? fetchEbayPrice(setNo, env.EBAY_APP_ID) : Promise.resolve({ aggregates: [], listings: [] }),
       ])
 
       const prices = consolidate({
@@ -156,6 +186,12 @@ export async function runRefresh(): Promise<void> {
         brickowl: owl,
         ebay,
         gbpToEur,
+      })
+
+      const listings = consolidateListings({
+        setNo,
+        bricklink: [...blListNew, ...blListUsed],
+        ebay: ebay.listings,
       })
 
       if (prices.length === 0 && !adlb) {
@@ -189,6 +225,8 @@ export async function runRefresh(): Promise<void> {
         )
         console.log(`[worker] ${setNo}: ADLB retail=${adlb.minPrice}€`)
       }
+
+      await persistListings(setNo, listings, capturedAt)
       ok++
     } catch (err) {
       console.error(`[worker] ${setNo} failed:`, (err as Error).message)
