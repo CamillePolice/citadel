@@ -25,6 +25,7 @@ ENV NODE_ENV=production \
 # L'image node:22 fournit déjà l'utilisateur "node" (uid/gid 1000),
 # cohérent avec PUID/PGID=1000 de ta stack.
 COPY --from=builder --chown=node:node /app/.output ./.output
+COPY --from=builder --chown=node:node /app/drizzle ./drizzle
 
 USER node
 EXPOSE 3000

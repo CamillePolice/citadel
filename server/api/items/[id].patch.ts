@@ -11,9 +11,9 @@ const patchSchema = z.object({
   hasInstructions: z.boolean().optional(),
   hasMinifigs: z.boolean().optional(),
   purchasePrice: z.number().nonnegative().optional(),
-  purchaseDate: z.string().optional(),
-  storageLocation: z.string().optional(),
-  notes: z.string().optional(),
+  purchaseDate: z.string().nullable().optional(),
+  storageLocation: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 export default defineEventHandler(async (event) => {
@@ -40,9 +40,9 @@ export default defineEventHandler(async (event) => {
   if (body.hasInstructions !== undefined) updates.hasInstructions = body.hasInstructions
   if (body.hasMinifigs !== undefined) updates.hasMinifigs = body.hasMinifigs
   if (body.purchasePrice !== undefined) updates.purchasePrice = String(body.purchasePrice)
-  if (body.purchaseDate !== undefined) updates.purchaseDate = body.purchaseDate
-  if (body.storageLocation !== undefined) updates.storageLocation = body.storageLocation
-  if (body.notes !== undefined) updates.notes = body.notes
+  if (body.purchaseDate !== undefined) updates.purchaseDate = body.purchaseDate ?? null
+  if (body.storageLocation !== undefined) updates.storageLocation = body.storageLocation ?? null
+  if (body.notes !== undefined) updates.notes = body.notes ?? null
 
   const [updated] = await db
     .update(userItems)

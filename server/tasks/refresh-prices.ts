@@ -29,12 +29,12 @@ async function getOwnedSetNos(): Promise<string[]> {
 
 async function ensureCatalogInDb(setNo: string): Promise<void> {
   const existing = await db
-    .select({ setNo: catalogSets.setNo })
+    .select({ setNo: catalogSets.setNo, imageUrl: catalogSets.imageUrl })
     .from(catalogSets)
     .where(eq(catalogSets.setNo, setNo))
     .limit(1)
 
-  if (existing.length > 0) return
+  if (existing.length > 0 && existing[0].imageUrl) return
 
   const data = await fetchRebrickableSet(setNo)
   if (!data) {
@@ -53,7 +53,16 @@ async function ensureCatalogInDb(setNo: string): Promise<void> {
       pieceCount: data.numParts,
       imageUrl: data.imageUrl,
     })
-    .onConflictDoNothing()
+    .onConflictDoUpdate({
+      target: catalogSets.setNo,
+      set: {
+        name: data.name,
+        year: data.year,
+        theme: data.theme != null ? String(data.theme) : null,
+        pieceCount: data.numParts,
+        imageUrl: data.imageUrl,
+      },
+    })
 }
 
 async function upsertPriceSnapshot(p: ConsolidatedPrice, capturedAt: string): Promise<void> {
