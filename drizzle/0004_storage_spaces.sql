@@ -1,4 +1,7 @@
-CREATE TYPE IF NOT EXISTS "storage_space_type" AS ENUM ('shelf', 'drawer', 'box', 'room');
+DO $$ BEGIN
+  CREATE TYPE "storage_space_type" AS ENUM ('shelf', 'drawer', 'box', 'room');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "storage_spaces" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
