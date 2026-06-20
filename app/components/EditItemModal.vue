@@ -54,6 +54,11 @@ function onCellClick(row: number, col: number) {
   showGrid.value = false
 }
 
+function clearPosition() {
+  selectedRow.value = null
+  selectedCol.value = null
+}
+
 async function save() {
   saving.value = true
   error.value = null
@@ -172,10 +177,7 @@ onMounted(async () => {
             <button
               v-if="selectedRow != null"
               class="text-xs text-imperial-muted hover:text-loss"
-              @click="
-                selectedRow = null
-                selectedCol = null
-              "
+              @click="clearPosition"
             >
               ✕
             </button>
