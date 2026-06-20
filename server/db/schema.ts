@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, uuid, numeric, integer, boolean, date, uniqueIndex, index } from 'drizzle-orm/pg-core'
+import { pgEnum, pgTable, text, uuid, numeric, integer, boolean, date, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 export const conditionItemEnum = pgEnum('condition_item', ['new_sealed', 'used'])
@@ -110,6 +110,15 @@ export const priceListings = pgTable(
     setSourceIdx: index('price_listings_set_source_idx').on(t.setNo, t.source),
   }),
 )
+
+export const workerRuns = pgTable('worker_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  startedAt: timestamp('started_at').notNull(),
+  finishedAt: timestamp('finished_at'),
+  ok: integer('ok'),
+  failed: integer('failed'),
+  errors: text('errors'),
+})
 
 export const portfolioSnapshots = pgTable(
   'portfolio_snapshots',
