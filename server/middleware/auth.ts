@@ -25,12 +25,16 @@ export default defineEventHandler(async (event) => {
     .map((g) => g.trim())
     .filter(Boolean)
 
+  const set: Record<string, unknown> = {}
+  if (email !== null) set.email = email
+  if (displayName !== null) set.displayName = displayName
+
   const [row] = await db
     .insert(users)
     .values({ authentikUid, email, displayName })
     .onConflictDoUpdate({
       target: users.authentikUid,
-      set: { email, displayName },
+      set: Object.keys(set).length ? set : { authentikUid },
     })
     .returning()
 
