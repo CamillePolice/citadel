@@ -13,6 +13,23 @@ export function itemToPriceCondition(condition: 'new_sealed' | 'used' | null): '
   return null
 }
 
+export function applyConditionDecote(
+  price: number,
+  opts: {
+    condition: string | null
+    completeness: string | null
+    hasBox: boolean | null
+    hasInstructions: boolean | null
+  },
+): number {
+  if (opts.condition !== 'used') return price
+  let factor = 1
+  if (opts.completeness === 'incomplete') factor *= 0.85
+  if (opts.hasBox === false) factor *= 0.9
+  if (opts.hasInstructions === false) factor *= 0.95
+  return Math.round(price * factor * 100) / 100
+}
+
 export interface LatestPrice {
   avgPrice: number
   source: 'bricklink' | 'brickowl' | 'avenuedelabrique'

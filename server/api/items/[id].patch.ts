@@ -1,20 +1,8 @@
 import { and, eq, sql } from 'drizzle-orm'
-import { z } from 'zod'
 import { db } from '../../db'
 import { catalogSets, userItems } from '../../db/schema'
-
-const patchSchema = z.object({
-  condition: z.enum(['new_sealed', 'used']).optional(),
-  quantity: z.number().int().positive().optional(),
-  completeness: z.enum(['complete', 'incomplete', 'na']).optional(),
-  hasBox: z.boolean().optional(),
-  hasInstructions: z.boolean().optional(),
-  hasMinifigs: z.boolean().optional(),
-  purchasePrice: z.number().nonnegative().optional(),
-  purchaseDate: z.string().nullable().optional(),
-  storageLocation: z.string().nullable().optional(),
-  notes: z.string().nullable().optional(),
-})
+import { latestPriceFor, applyConditionDecote } from '../../utils/pricing'
+import { patchItemSchema as patchSchema } from '../../utils/schemas'
 
 export default defineEventHandler(async (event) => {
   const user = requireUser(event)
@@ -39,7 +27,8 @@ export default defineEventHandler(async (event) => {
   if (body.hasBox !== undefined) updates.hasBox = body.hasBox
   if (body.hasInstructions !== undefined) updates.hasInstructions = body.hasInstructions
   if (body.hasMinifigs !== undefined) updates.hasMinifigs = body.hasMinifigs
-  if (body.purchasePrice !== undefined) updates.purchasePrice = String(body.purchasePrice)
+  if (body.purchasePrice !== undefined)
+    updates.purchasePrice = body.purchasePrice != null ? String(body.purchasePrice) : null
   if (body.purchaseDate !== undefined) updates.purchaseDate = body.purchaseDate ?? null
   if (body.storageLocation !== undefined) updates.storageLocation = body.storageLocation ?? null
   if (body.notes !== undefined) updates.notes = body.notes ?? null
@@ -66,9 +55,18 @@ export default defineEventHandler(async (event) => {
     .where(eq(catalogSets.setNo, updated.setNo))
     .limit(1)
 
+  const price = await latestPriceFor(updated.setNo, updated.condition)
+  const purchasePriceNum = updated.purchasePrice != null ? Number(updated.purchasePrice) : null
+  const qty = updated.quantity ?? 1
+  const basePrice = price ? applyConditionDecote(price.avgPrice, updated) : 0
+  const currentValue = basePrice * qty
+  const cost = (purchasePriceNum ?? 0) * qty
+  const pnl = price ? currentValue - cost : 0
+  const pnlPct = price && cost > 0 ? (pnl / cost) * 100 : 0
+
   return {
     ...updated,
-    purchasePrice: updated.purchasePrice != null ? Number(updated.purchasePrice) : null,
+    purchasePrice: purchasePriceNum,
     name: catalog?.name ?? null,
     theme: catalog?.theme ?? null,
     year: catalog?.year ?? null,
@@ -76,5 +74,11 @@ export default defineEventHandler(async (event) => {
     imageUrl: catalog?.imageUrl ?? null,
     retirementStatus: catalog?.retirementStatus ?? 'unknown',
     retailPrice: catalog?.retailPrice != null ? Number(catalog.retailPrice) : null,
+    currentValue,
+    cost,
+    pnl,
+    pnlPct,
+    priceSource: price?.source ?? null,
+    degraded: !price,
   }
 })

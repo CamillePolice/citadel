@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { catalogSets, userItems } from '../db/schema'
-import { latestPriceFor } from '../utils/pricing'
+import { latestPriceFor, applyConditionDecote } from '../utils/pricing'
 
 export default defineEventHandler(async (event) => {
   const user = requireUser(event)
@@ -40,9 +40,10 @@ export default defineEventHandler(async (event) => {
       const cost = Number(r.purchasePrice ?? 0) * qty
       const price = await latestPriceFor(r.setNo, r.condition)
 
-      const currentValue = price ? price.avgPrice * qty : 0
-      const pnl = price ? currentValue - cost : 0
-      const pnlPct = price && cost > 0 ? (pnl / cost) * 100 : 0
+      const basePrice = price ? applyConditionDecote(price.avgPrice, r) : 0
+      const currentValue = basePrice * qty
+      const pnl = basePrice ? currentValue - cost : 0
+      const pnlPct = basePrice && cost > 0 ? (pnl / cost) * 100 : 0
 
       return {
         ...r,

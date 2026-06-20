@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '../db'
 import { catalogSets, userItems } from '../db/schema'
-import { normalizeSetNo, latestPriceFor } from '../utils/pricing'
+import { normalizeSetNo, latestPriceFor, applyConditionDecote } from '../utils/pricing'
 import { ensureCatalogSet } from '../utils/catalog'
 
 const bodySchema = z.object({
@@ -64,10 +64,11 @@ export default defineEventHandler(async (event) => {
   const price = await latestPriceFor(setNo, created.condition)
   const purchasePriceNum = created.purchasePrice != null ? Number(created.purchasePrice) : null
   const qty = created.quantity ?? 1
-  const currentValue = price ? price.avgPrice * qty : 0
+  const basePrice = price ? applyConditionDecote(price.avgPrice, created) : 0
+  const currentValue = basePrice * qty
   const cost = (purchasePriceNum ?? 0) * qty
-  const pnl = price ? currentValue - cost : 0
-  const pnlPct = price && cost > 0 ? (pnl / cost) * 100 : 0
+  const pnl = basePrice ? currentValue - cost : 0
+  const pnlPct = basePrice && cost > 0 ? (pnl / cost) * 100 : 0
 
   setResponseStatus(event, 201)
   return {
