@@ -16,7 +16,9 @@
     "db:studio": "drizzle-kit studio",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "worker": "tsx server/tasks/refresh-prices.ts"
+    "worker": "tsx server/tasks/refresh-prices.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.11.3",
@@ -46,7 +48,9 @@
     "lint-staged": "^16.1.0",
     "prettier": "3.8.3",
     "typescript": "5.8.3",
-    "vue-tsc": "3.3.3"
+    "vue-tsc": "3.3.3",
+    "@vitest/coverage-v8": "4.1.9",
+    "vitest": "4.1.9"
   },
   "lint-staged": {
     "*.{ts,vue}": [

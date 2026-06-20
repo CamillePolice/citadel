@@ -2,6 +2,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '../../db'
 import { userItems } from '../../db/schema'
+import { latestPriceFor, applyConditionDecote } from '../../utils/pricing'
 
 const patchSchema = z.object({
   condition: z.enum(['new_sealed', 'used']).optional(),
@@ -50,5 +51,25 @@ export default defineEventHandler(async (event) => {
     .where(and(eq(userItems.id, id), eq(userItems.userId, user.id)))
     .returning()
 
-  return updated
+  if (!updated) throw createError({ statusCode: 404, statusMessage: 'Item not found' })
+
+  const price = await latestPriceFor(updated.setNo, updated.condition)
+  const purchasePriceNum = updated.purchasePrice != null ? Number(updated.purchasePrice) : null
+  const qty = updated.quantity ?? 1
+  const basePrice = price ? applyConditionDecote(price.avgPrice, updated) : 0
+  const currentValue = basePrice * qty
+  const cost = (purchasePriceNum ?? 0) * qty
+  const pnl = basePrice ? currentValue - cost : 0
+  const pnlPct = basePrice && cost > 0 ? (pnl / cost) * 100 : 0
+
+  return {
+    ...updated,
+    purchasePrice: purchasePriceNum,
+    currentValue,
+    cost,
+    pnl,
+    pnlPct,
+    priceSource: price?.source ?? null,
+    degraded: !price,
+  }
 })
