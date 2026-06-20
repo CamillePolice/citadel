@@ -2,7 +2,7 @@
   "name": "citadel",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
+  "version": "1.2.0",
   "scripts": {
     "prepare": "husky",
     "dev": "nuxt dev",

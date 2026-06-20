@@ -7,12 +7,13 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, statusMessage: 'Missing id' })
 
-  const [{ n }] = await db
+  const result = await db
     .select({ n: count(userItems.id) })
     .from(userItems)
     .where(and(eq(userItems.storageSpaceId, id), eq(userItems.userId, user.id)))
 
-  if (n > 0) throw createError({ statusCode: 409, statusMessage: 'Space has items — unassign them first' })
+  if ((result[0]?.n ?? 0) > 0)
+    throw createError({ statusCode: 409, statusMessage: 'Space has items — unassign them first' })
 
   const [deleted] = await db
     .delete(storageSpaces)
