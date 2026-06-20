@@ -65,7 +65,7 @@ async function ensureCatalogInDb(setNo: string): Promise<void> {
     })
 }
 
-async function upsertPriceSnapshot(p: ConsolidatedPrice, capturedAt: string): Promise<void> {
+async function upsertPriceSnapshot(p: ConsolidatedPrice, capturedAt: string, sourceUrl?: string | null): Promise<void> {
   await db
     .insert(priceSnapshots)
     .values({
@@ -81,6 +81,7 @@ async function upsertPriceSnapshot(p: ConsolidatedPrice, capturedAt: string): Pr
       maxPrice: p.maxPrice != null ? String(p.maxPrice) : null,
       qtySold: p.qtySold != null ? String(p.qtySold) : null,
       unitQuantity: p.unitQuantity,
+      sourceUrl: sourceUrl ?? null,
       capturedAt,
     })
     .onConflictDoUpdate({
@@ -100,6 +101,7 @@ async function upsertPriceSnapshot(p: ConsolidatedPrice, capturedAt: string): Pr
         maxPrice: p.maxPrice != null ? String(p.maxPrice) : null,
         qtySold: p.qtySold != null ? String(p.qtySold) : null,
         unitQuantity: p.unitQuantity,
+        sourceUrl: sourceUrl ?? null,
       },
     })
 }
@@ -158,7 +160,10 @@ export async function runRefresh(): Promise<void> {
   const startedAt = Date.now()
   console.log('[worker] refresh-prices: run start')
 
-  const [runRow] = await db.insert(workerRuns).values({ startedAt: new Date(startedAt) }).returning({ id: workerRuns.id })
+  const [runRow] = await db
+    .insert(workerRuns)
+    .values({ startedAt: new Date(startedAt) })
+    .returning({ id: workerRuns.id })
   const runId = runRow.id
 
   const env = validateWorkerEnv()
@@ -170,7 +175,10 @@ export async function runRefresh(): Promise<void> {
 
   if (setNos.length === 0) {
     console.log('[worker] no owned sets, nothing to do')
-    await db.update(workerRuns).set({ finishedAt: new Date(), ok: 0, failed: 0, errors: '[]' }).where(eq(workerRuns.id, runId))
+    await db
+      .update(workerRuns)
+      .set({ finishedAt: new Date(), ok: 0, failed: 0, errors: '[]' })
+      .where(eq(workerRuns.id, runId))
     return
   }
 
@@ -236,6 +244,7 @@ export async function runRefresh(): Promise<void> {
             degraded: false,
           },
           capturedAt,
+          adlb.productUrl,
         )
         console.log(`[worker] ${setNo}: ADLB retail=${adlb.minPrice}€`)
       }
@@ -260,7 +269,10 @@ export async function runRefresh(): Promise<void> {
   const secs = ((Date.now() - startedAt) / 1000).toFixed(1)
   console.log(`[worker] refresh-prices: done in ${secs}s (ok=${ok} failed=${failed})`)
 
-  await db.update(workerRuns).set({ finishedAt: new Date(), ok, failed, errors: JSON.stringify(errorLog) }).where(eq(workerRuns.id, runId))
+  await db
+    .update(workerRuns)
+    .set({ finishedAt: new Date(), ok, failed, errors: JSON.stringify(errorLog) })
+    .where(eq(workerRuns.id, runId))
 }
 
 console.log(`[worker] refresh-prices scheduled: ${schedule}`)
