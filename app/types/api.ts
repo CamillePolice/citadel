@@ -29,6 +29,8 @@ export interface Item {
   pnlPct: number
   priceSource: PriceSource
   degraded: boolean
+  retirementStatus: RetirementStatus
+  retailPrice: number | null
 }
 
 export interface ThemeBucket {

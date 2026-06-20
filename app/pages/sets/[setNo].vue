@@ -51,7 +51,10 @@ async function onDelete() {
         />
         <div class="flex-1">
           <h1 class="text-2xl font-semibold">{{ item.name ?? item.setNo }}</h1>
-          <p class="text-imperial-muted">{{ item.theme }} · {{ item.setNo }}</p>
+          <div class="mt-1 flex items-center gap-2">
+            <p class="text-imperial-muted">{{ item.theme }} · {{ item.setNo }}</p>
+            <RetirementBadge :status="item.retirementStatus" />
+          </div>
           <div class="mt-3 flex flex-wrap gap-6">
             <div>
               <p class="text-xs text-imperial-muted">Valeur</p>
