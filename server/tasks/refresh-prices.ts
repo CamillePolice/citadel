@@ -1,7 +1,7 @@
 import cron from 'node-cron'
 import { sql, eq, and } from 'drizzle-orm'
 import { db } from '../db'
-import { catalogSets, priceSnapshots, priceListings } from '../db/schema'
+import { catalogSets, priceSnapshots, priceListings, workerRuns } from '../db/schema'
 import { validateWorkerEnv } from '../utils/env'
 import { fetchBricklinkPrice, fetchBricklinkListings } from '../lib/bricklink'
 import { fetchBrickOwlPrice } from '../lib/brickowl'
@@ -148,6 +148,10 @@ async function recomputePortfolios(capturedAt: string): Promise<void> {
 export async function runRefresh(): Promise<void> {
   const startedAt = Date.now()
   console.log('[worker] refresh-prices: run start')
+
+  const [runRow] = await db.insert(workerRuns).values({ startedAt: new Date(startedAt) }).returning({ id: workerRuns.id })
+  const runId = runRow.id
+
   const env = validateWorkerEnv()
   resetFxCache()
 
@@ -157,12 +161,14 @@ export async function runRefresh(): Promise<void> {
 
   if (setNos.length === 0) {
     console.log('[worker] no owned sets, nothing to do')
+    await db.update(workerRuns).set({ finishedAt: new Date(), ok: 0, failed: 0, errors: '[]' }).where(eq(workerRuns.id, runId))
     return
   }
 
   const gbpToEur = await getGbpToEurRate()
   let ok = 0
   let failed = 0
+  const errorLog: { setNo: string; error: string }[] = []
 
   for (const setNo of setNos) {
     try {
@@ -228,7 +234,9 @@ export async function runRefresh(): Promise<void> {
       await persistListings(setNo, listings, capturedAt)
       ok++
     } catch (err) {
-      console.error(`[worker] ${setNo} failed:`, (err as Error).message)
+      const msg = (err as Error).message
+      console.error(`[worker] ${setNo} failed:`, msg)
+      errorLog.push({ setNo, error: msg })
       failed++
     }
   }
@@ -242,6 +250,8 @@ export async function runRefresh(): Promise<void> {
 
   const secs = ((Date.now() - startedAt) / 1000).toFixed(1)
   console.log(`[worker] refresh-prices: done in ${secs}s (ok=${ok} failed=${failed})`)
+
+  await db.update(workerRuns).set({ finishedAt: new Date(), ok, failed, errors: JSON.stringify(errorLog) }).where(eq(workerRuns.id, runId))
 }
 
 console.log(`[worker] refresh-prices scheduled: ${schedule}`)
