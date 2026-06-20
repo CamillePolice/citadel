@@ -16,6 +16,7 @@ export default defineNuxtConfig({
   pwa: {
     registerType: 'autoUpdate',
     manifest: {
+      id: '/dashboard',
       name: 'Citadel',
       short_name: 'Citadel',
       description: 'Portfolio LEGO — suivi de collection et P&L',
