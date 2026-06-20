@@ -27,6 +27,8 @@ export default defineEventHandler(async (event) => {
       year: catalogSets.year,
       pieceCount: catalogSets.pieceCount,
       imageUrl: catalogSets.imageUrl,
+      retirementStatus: catalogSets.retirementStatus,
+      retailPrice: catalogSets.retailPrice,
     })
     .from(userItems)
     .leftJoin(catalogSets, eq(userItems.setNo, catalogSets.setNo))
@@ -44,6 +46,8 @@ export default defineEventHandler(async (event) => {
 
       return {
         ...r,
+        purchasePrice: r.purchasePrice != null ? Number(r.purchasePrice) : null,
+        retailPrice: r.retailPrice != null ? Number(r.retailPrice) : null,
         currentValue,
         cost,
         pnl,

@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '../../db'
-import { userItems } from '../../db/schema'
+import { catalogSets, userItems } from '../../db/schema'
 
 const patchSchema = z.object({
   condition: z.enum(['new_sealed', 'used']).optional(),
@@ -50,5 +50,31 @@ export default defineEventHandler(async (event) => {
     .where(and(eq(userItems.id, id), eq(userItems.userId, user.id)))
     .returning()
 
-  return updated
+  if (!updated) throw createError({ statusCode: 404, statusMessage: 'Item not found' })
+
+  const [catalog] = await db
+    .select({
+      name: catalogSets.name,
+      theme: catalogSets.theme,
+      year: catalogSets.year,
+      pieceCount: catalogSets.pieceCount,
+      imageUrl: catalogSets.imageUrl,
+      retirementStatus: catalogSets.retirementStatus,
+      retailPrice: catalogSets.retailPrice,
+    })
+    .from(catalogSets)
+    .where(eq(catalogSets.setNo, updated.setNo))
+    .limit(1)
+
+  return {
+    ...updated,
+    purchasePrice: updated.purchasePrice != null ? Number(updated.purchasePrice) : null,
+    name: catalog?.name ?? null,
+    theme: catalog?.theme ?? null,
+    year: catalog?.year ?? null,
+    pieceCount: catalog?.pieceCount ?? null,
+    imageUrl: catalog?.imageUrl ?? null,
+    retirementStatus: catalog?.retirementStatus ?? 'unknown',
+    retailPrice: catalog?.retailPrice != null ? Number(catalog.retailPrice) : null,
+  }
 })
