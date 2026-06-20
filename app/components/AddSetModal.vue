@@ -15,6 +15,33 @@ const preview = ref<CatalogSet | null>(null)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
+const searchResults = ref<CatalogSet[]>([])
+const searchLoading = ref(false)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+function onSearchInput(e: Event) {
+  const q = (e.target as HTMLInputElement).value
+  if (debounceTimer) clearTimeout(debounceTimer)
+  if (q.length < 2) {
+    searchResults.value = []
+    return
+  }
+  debounceTimer = setTimeout(async () => {
+    searchLoading.value = true
+    try {
+      searchResults.value = await $fetch<CatalogSet[]>('/api/sets/search?q=' + encodeURIComponent(q))
+    } finally {
+      searchLoading.value = false
+    }
+  }, 300)
+}
+
+async function selectResult(item: CatalogSet) {
+  searchResults.value = []
+  setNo.value = item.setNo
+  await doLookup()
+}
+
 const form = reactive<Omit<CreateItemPayload, 'setNo'>>({
   condition: 'new_sealed',
   quantity: 1,
@@ -79,13 +106,36 @@ async function save() {
 
       <div v-if="step === 1" class="space-y-3">
         <label class="block text-sm text-imperial-muted">Numéro de set</label>
-        <input
-          v-model="setNo"
-          type="text"
-          placeholder="ex: 10497-1"
-          class="w-full rounded border border-imperial-border bg-imperial-bg px-3 py-2 text-imperial-text"
-          @keyup.enter="doLookup"
-        />
+        <div class="relative">
+          <input
+            v-model="setNo"
+            type="text"
+            placeholder="ex: 10497-1 ou nom du set"
+            class="w-full rounded border border-imperial-border bg-imperial-bg px-3 py-2 text-imperial-text"
+            @input="onSearchInput"
+            @keyup.enter="doLookup"
+          />
+          <ul
+            v-if="searchResults.length > 0"
+            class="absolute z-10 mt-1 w-full rounded border border-imperial-border bg-imperial-surface shadow-lg"
+          >
+            <li
+              v-for="item in searchResults"
+              :key="item.setNo"
+              class="cursor-pointer px-3 py-2 hover:bg-imperial-bg"
+              @mousedown.prevent="selectResult(item)"
+            >
+              <span class="font-medium">{{ item.setNo }}</span>
+              <span class="ml-2 text-sm text-imperial-muted">{{ item.name }}</span>
+              <span v-if="item.theme || item.year" class="ml-2 text-xs text-imperial-muted">
+                {{ [item.theme, item.year].filter(Boolean).join(' · ') }}
+              </span>
+            </li>
+          </ul>
+          <p v-else-if="searchLoading" class="absolute mt-1 w-full rounded border border-imperial-border bg-imperial-surface px-3 py-2 text-sm text-imperial-muted">
+            Recherche...
+          </p>
+        </div>
         <p v-if="lookupError" class="text-sm text-loss">{{ lookupError }}</p>
         <button
           :disabled="lookupLoading || !setNo.trim()"
