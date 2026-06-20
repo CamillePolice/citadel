@@ -20,6 +20,9 @@ export interface Item {
   condition: ConditionItem | null
   quantity: number
   completeness: Completeness | null
+  hasBox: boolean | null
+  hasInstructions: boolean | null
+  hasMinifigs: boolean | null
   purchasePrice: number | null
   purchaseDate: string | null
   storageLocation: string | null

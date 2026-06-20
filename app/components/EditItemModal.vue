@@ -14,6 +14,9 @@ const form = reactive<UpdateItemPayload>({
   condition: props.item.condition ?? 'new_sealed',
   quantity: props.item.quantity,
   completeness: props.item.completeness ?? 'na',
+  hasBox: props.item.hasBox ?? true,
+  hasInstructions: props.item.hasInstructions ?? true,
+  hasMinifigs: props.item.hasMinifigs ?? true,
   purchasePrice: props.item.purchasePrice,
   purchaseDate: props.item.purchaseDate,
   storageLocation: props.item.storageLocation,
@@ -114,6 +117,21 @@ async function save() {
           rows="2"
           class="w-full rounded border border-imperial-border bg-imperial-bg px-2 py-1.5"
         />
+      </div>
+
+      <div class="mt-3 flex gap-4">
+        <label class="flex items-center gap-1.5 text-sm">
+          <input v-model="form.hasBox" type="checkbox" />
+          Boîte
+        </label>
+        <label class="flex items-center gap-1.5 text-sm">
+          <input v-model="form.hasInstructions" type="checkbox" />
+          Instructions
+        </label>
+        <label class="flex items-center gap-1.5 text-sm">
+          <input v-model="form.hasMinifigs" type="checkbox" />
+          Minifigs
+        </label>
       </div>
 
       <p v-if="error" class="mt-3 text-sm text-loss">{{ error }}</p>
