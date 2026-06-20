@@ -55,6 +55,25 @@ async function onDelete() {
             <p class="text-imperial-muted">{{ item.theme }} · {{ item.setNo }}</p>
             <RetirementBadge :status="item.retirementStatus" />
           </div>
+          <div v-if="item.storageSpaceId || item.storageLocation" class="mt-2">
+            <NuxtLink
+              v-if="item.storageSpaceId"
+              :to="`/storage/${item.storageSpaceId}`"
+              class="inline-flex items-center gap-1 rounded border border-imperial-border px-2 py-0.5 text-xs text-imperial-muted hover:text-imperial-text"
+            >
+              📦
+              <span>{{ item.storageLocation || 'Espace stockage' }}</span>
+              <span v-if="item.storageRow != null && item.storageCol != null">
+                · R{{ item.storageRow }} C{{ item.storageCol }}</span
+              >
+            </NuxtLink>
+            <span
+              v-else
+              class="inline-flex items-center gap-1 rounded border border-imperial-border px-2 py-0.5 text-xs text-imperial-muted"
+            >
+              📦 {{ item.storageLocation }}
+            </span>
+          </div>
           <div class="mt-3 flex flex-wrap gap-6">
             <div>
               <p class="text-xs text-imperial-muted">Valeur</p>
@@ -94,6 +113,8 @@ async function onDelete() {
         <p v-if="pricesError" class="text-sm text-imperial-muted">{{ pricesError }}</p>
         <ChartsPriceHistoryChart v-else :points="prices" />
       </div>
+
+      <PriceSourcesPanel :set-no="setNo" />
 
       <PriceListingsPanel :set-no="setNo" />
 

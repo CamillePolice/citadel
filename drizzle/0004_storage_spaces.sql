@@ -1,0 +1,17 @@
+CREATE TYPE "storage_space_type" AS ENUM ('shelf', 'drawer', 'box', 'room');
+
+CREATE TABLE "storage_spaces" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "name" text NOT NULL,
+  "type" "storage_space_type" NOT NULL DEFAULT 'shelf',
+  "rows" integer,
+  "cols" integer,
+  "description" text,
+  "created_at" timestamp DEFAULT now()
+);
+
+ALTER TABLE "user_items"
+  ADD COLUMN "storage_space_id" uuid REFERENCES "storage_spaces"("id") ON DELETE SET NULL,
+  ADD COLUMN "storage_row" integer,
+  ADD COLUMN "storage_col" integer;

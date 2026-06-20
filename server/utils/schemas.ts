@@ -10,5 +10,8 @@ export const patchItemSchema = z.object({
   purchasePrice: z.number().nonnegative().nullish(),
   purchaseDate: z.string().nullable().optional(),
   storageLocation: z.string().nullable().optional(),
+  storageSpaceId: z.string().uuid().nullable().optional(),
+  storageRow: z.number().int().nonnegative().nullable().optional(),
+  storageCol: z.number().int().nonnegative().nullable().optional(),
   notes: z.string().nullable().optional(),
 })

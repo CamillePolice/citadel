@@ -12,6 +12,7 @@ onMounted(() => user.fetchMe())
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <NuxtLink to="/dashboard" class="text-lg font-semibold text-imperial-accent">Citadel</NuxtLink>
         <div class="flex items-center gap-4">
+          <NuxtLink to="/storage" class="text-sm text-imperial-muted hover:text-imperial-text">Stockage</NuxtLink>
           <NuxtLink to="/aide" class="text-sm text-imperial-muted hover:text-imperial-text">Aide</NuxtLink>
           <span class="text-sm text-imperial-muted">{{ user.displayName }}</span>
         </div>

@@ -2,6 +2,31 @@ export type ConditionItem = 'new_sealed' | 'used'
 export type Completeness = 'complete' | 'incomplete' | 'na'
 export type PriceSource = 'bricklink' | 'brickowl' | 'avenuedelabrique'
 export type RetirementStatus = 'available' | 'retiring_soon' | 'retired' | 'unknown'
+export type StorageSpaceType = 'shelf' | 'drawer' | 'box' | 'room'
+
+export interface StorageSpace {
+  id: string
+  name: string
+  type: StorageSpaceType
+  rows: number | null
+  cols: number | null
+  description: string | null
+  itemCount: number
+}
+
+export interface StorageSpaceDetail extends StorageSpace {
+  items: StorageSpaceItem[]
+}
+
+export interface StorageSpaceItem {
+  id: string
+  setNo: string
+  name: string | null
+  imageUrl: string | null
+  condition: ConditionItem | null
+  storageRow: number | null
+  storageCol: number | null
+}
 
 export interface User {
   id: string
@@ -26,6 +51,9 @@ export interface Item {
   purchasePrice: number | null
   purchaseDate: string | null
   storageLocation: string | null
+  storageSpaceId: string | null
+  storageRow: number | null
+  storageCol: number | null
   notes: string | null
   currentValue: number
   pnl: number
@@ -105,7 +133,11 @@ export interface CreateItemPayload {
   notes: string | null
 }
 
-export type UpdateItemPayload = Partial<Omit<CreateItemPayload, 'setNo'>>
+export type UpdateItemPayload = Partial<Omit<CreateItemPayload, 'setNo'>> & {
+  storageSpaceId?: string | null
+  storageRow?: number | null
+  storageCol?: number | null
+}
 
 export interface PriceListing {
   id: string

@@ -31,6 +31,9 @@ export default defineEventHandler(async (event) => {
     updates.purchasePrice = body.purchasePrice != null ? String(body.purchasePrice) : null
   if (body.purchaseDate !== undefined) updates.purchaseDate = body.purchaseDate ?? null
   if (body.storageLocation !== undefined) updates.storageLocation = body.storageLocation ?? null
+  if (body.storageSpaceId !== undefined) updates.storageSpaceId = body.storageSpaceId ?? null
+  if (body.storageRow !== undefined) updates.storageRow = body.storageRow ?? null
+  if (body.storageCol !== undefined) updates.storageCol = body.storageCol ?? null
   if (body.notes !== undefined) updates.notes = body.notes ?? null
 
   const [updated] = await db

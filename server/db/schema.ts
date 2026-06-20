@@ -1,5 +1,19 @@
-import { pgEnum, pgTable, text, uuid, numeric, integer, boolean, date, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core'
+import {
+  pgEnum,
+  pgTable,
+  text,
+  uuid,
+  numeric,
+  integer,
+  boolean,
+  date,
+  timestamp,
+  uniqueIndex,
+  index,
+} from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
+
+export const storageSpaceTypeEnum = pgEnum('storage_space_type', ['shelf', 'drawer', 'box', 'room'])
 
 export const conditionItemEnum = pgEnum('condition_item', ['new_sealed', 'used'])
 export const conditionPriceEnum = pgEnum('condition_price', ['new', 'used'])
@@ -35,6 +49,21 @@ export const catalogSets = pgTable('catalog_sets', {
   lastEnrichedAt: text('last_enriched_at'),
 })
 
+export const storageSpaces = pgTable('storage_spaces', {
+  id: uuid('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  type: storageSpaceTypeEnum('type').notNull().default('shelf'),
+  rows: integer('rows'),
+  cols: integer('cols'),
+  description: text('description'),
+  createdAt: timestamp('created_at').default(sql`now()`),
+})
+
 export const userItems = pgTable('user_items', {
   id: uuid('id')
     .primaryKey()
@@ -54,6 +83,9 @@ export const userItems = pgTable('user_items', {
   purchasePrice: numeric('purchase_price'),
   purchaseDate: date('purchase_date'),
   storageLocation: text('storage_location'),
+  storageSpaceId: uuid('storage_space_id').references(() => storageSpaces.id, { onDelete: 'set null' }),
+  storageRow: integer('storage_row'),
+  storageCol: integer('storage_col'),
   notes: text('notes'),
   createdAt: text('created_at').default(sql`now()`),
   updatedAt: text('updated_at').default(sql`now()`),
@@ -79,6 +111,7 @@ export const priceSnapshots = pgTable(
     maxPrice: numeric('max_price'),
     qtySold: numeric('qty_sold'),
     unitQuantity: integer('unit_quantity'),
+    sourceUrl: text('source_url'),
     capturedAt: date('captured_at').notNull(),
   },
   (t) => ({
