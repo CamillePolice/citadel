@@ -2,9 +2,6 @@ import { readFileSync } from 'node:fs'
 const { version } = JSON.parse(readFileSync('./package.json', 'utf-8'))
 
 export default defineNuxtConfig({
-  appConfig: {
-    version,
-  },
   compatibilityDate: '2026-06-06',
   ssr: false,
   future: {
@@ -40,6 +37,9 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
+    public: {
+      version,
+    },
     authHeaderUid: 'x-authentik-uid',
     authHeaderEmail: 'x-authentik-email',
     authHeaderUsername: 'x-authentik-username',

@@ -3,7 +3,9 @@ import { onMounted } from 'vue'
 import { useUserStore } from '~/stores/user'
 
 const user = useUserStore()
-const { version } = useAppConfig()
+const {
+  public: { version },
+} = useRuntimeConfig()
 onMounted(() => user.fetchMe())
 </script>
 
@@ -23,11 +25,12 @@ onMounted(() => user.fetchMe())
     <main class="mx-auto max-w-6xl px-4 py-6">
       <NuxtPage />
     </main>
-    <footer class="border-t border-imperial-border mt-8">
-      <div class="mx-auto max-w-6xl px-4 py-3 flex justify-end">
-        <NuxtLink to="/changelog" class="text-xs text-imperial-border hover:text-imperial-muted"
-          >v{{ version }}</NuxtLink
-        >
+    <footer class="border-t border-imperial-border mt-8 bg-imperial-surface">
+      <div class="mx-auto max-w-6xl px-4 py-3 flex justify-between items-center">
+        <span class="text-xs text-imperial-muted">Citadel — Portfolio LEGO</span>
+        <NuxtLink to="/changelog" class="text-xs text-imperial-muted hover:text-imperial-text">
+          v{{ version }}
+        </NuxtLink>
       </div>
     </footer>
   </div>
