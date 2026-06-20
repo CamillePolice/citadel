@@ -1,5 +1,4 @@
 import sharp from 'sharp'
-import { writeFileSync } from 'node:fs'
 
 const BG = '#0f1729'
 const ACCENT = '#4f8ef7'
@@ -19,7 +18,6 @@ function buildSvg(size) {
   ]
 
   const bricks = rows.flatMap(({ y, offset }) => {
-    const cols = [-brickW - gap + offset, gap * 0.5 + offset, brickW * 2 + gap * 1.5 + offset].slice(0, 2)
     const out = []
     for (let i = -1; i <= 1; i++) {
       const x = c + i * (brickW + gap) - brickW / 2 + offset
