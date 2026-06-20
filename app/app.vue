@@ -11,12 +11,7 @@ onMounted(() => user.fetchMe())
   <div class="min-h-full bg-imperial-bg text-imperial-text">
     <header class="border-b border-imperial-border bg-imperial-surface">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <div class="flex items-baseline gap-2">
-          <NuxtLink to="/dashboard" class="text-lg font-semibold text-imperial-accent">Citadel</NuxtLink>
-          <NuxtLink to="/changelog" class="text-xs text-imperial-border hover:text-imperial-muted"
-            >v{{ version }}</NuxtLink
-          >
-        </div>
+        <NuxtLink to="/dashboard" class="text-lg font-semibold text-imperial-accent">Citadel</NuxtLink>
         <div class="flex items-center gap-4">
           <NuxtLink to="/storage" class="text-sm text-imperial-muted hover:text-imperial-text">Stockage</NuxtLink>
           <NuxtLink to="/changelog" class="text-sm text-imperial-muted hover:text-imperial-text">Changelog</NuxtLink>
@@ -28,5 +23,12 @@ onMounted(() => user.fetchMe())
     <main class="mx-auto max-w-6xl px-4 py-6">
       <NuxtPage />
     </main>
+    <footer class="border-t border-imperial-border mt-8">
+      <div class="mx-auto max-w-6xl px-4 py-3 flex justify-end">
+        <NuxtLink to="/changelog" class="text-xs text-imperial-border hover:text-imperial-muted"
+          >v{{ version }}</NuxtLink
+        >
+      </div>
+    </footer>
   </div>
 </template>
