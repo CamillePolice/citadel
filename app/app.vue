@@ -6,6 +6,11 @@ const user = useUserStore()
 const {
   public: { version },
 } = useRuntimeConfig()
+
+useHead({
+  link: [{ rel: 'manifest', href: '/manifest.webmanifest' }],
+})
+
 onMounted(() => user.fetchMe())
 </script>
 
