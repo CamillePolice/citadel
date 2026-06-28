@@ -45,6 +45,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: registry.camillepolice.com/citadel/app
+          labels: |
+            org.opencontainers.image.title=Citadel
+            org.opencontainers.image.description=Self-hosted LEGO collection tracker — tracks sets as an investment portfolio with daily market prices and P&L
+
       - name: Log in to registry
         uses: docker/login-action@v3
         with:
@@ -60,6 +69,7 @@ jobs:
           tags: |
             registry.camillepolice.com/citadel/app:latest
             registry.camillepolice.com/citadel/app:${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
