@@ -22,11 +22,7 @@ services:
     # Pas de "ports:" : la DB n'est joignable que sur le réseau interne
 
   citadel-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    # Alternative CI : image construite et poussée sur ton registre GitLab
-    # image: registry.camillepolice.com/citadel/app:latest
+    image: registry.camillepolice.com/citadel/app:latest
     container_name: citadel-app
     restart: unless-stopped
     depends_on:
@@ -62,10 +58,7 @@ services:
     # de l'outpost et ne peuvent pas être spoofés depuis l'extérieur.
 
   citadel-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    # image: registry.camillepolice.com/citadel/app:latest
+    image: registry.camillepolice.com/citadel/app:latest
     container_name: citadel-worker
     restart: unless-stopped
     command: ['node', '.output/worker.mjs']
