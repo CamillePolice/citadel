@@ -53,6 +53,7 @@ jobs:
           labels: |
             org.opencontainers.image.title=Citadel
             org.opencontainers.image.description=Self-hosted LEGO collection tracker — tracks sets as an investment portfolio with daily market prices and P&L
+            org.opencontainers.image.vendor=Camille Police
 
       - name: Log in to registry
         uses: docker/login-action@v3
